@@ -6,6 +6,7 @@ use App\Models\Company\Company;
 use App\Models\System\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Service extends Model
 {
@@ -42,5 +43,18 @@ class Service extends Model
     public function serviceTaxes()
     {
         return $this->hasMany(ServiceTax::class);
+    }
+
+    protected static function booted()
+    {
+        static::saved(function ($service) {
+            Cache::forget("service_{$service->id}");
+            Cache::tags(['services'])->flush();
+        });
+
+        static::deleted(function ($service) {
+            Cache::forget("service_{$service->id}");
+            Cache::tags(['services'])->flush();
+        });
     }
 }

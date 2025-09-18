@@ -4,6 +4,7 @@ namespace App\Models\System;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Role extends Model
 {
@@ -38,5 +39,18 @@ class Role extends Model
         return $this->belongsToMany(User::class, 'permissions_roles', 'role_id', 'permission_id')
                     ->withTimestamps()
                     ->withPivot('created_by');
+    }
+
+    protected static function booted()
+    {
+        static::saved(function ($role) {
+            Cache::forget("role_{$role->id}");
+            Cache::tags(['roles'])->flush();
+        });
+
+        static::deleted(function ($role) {
+            Cache::forget("role_{$role->id}");
+            Cache::tags(['roles'])->flush();
+        });
     }
 }

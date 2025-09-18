@@ -5,6 +5,7 @@ namespace App\Models\Company;
 use App\Models\System\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Company extends Model
 {
@@ -38,5 +39,18 @@ class Company extends Model
     public function updatedBy()
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    protected static function booted()
+    {
+        static::saved(function ($company) {
+            Cache::forget("company_{$company->id}");
+            Cache::tags(['companies'])->flush();
+        });
+
+        static::deleted(function ($company) {
+            Cache::forget("company_{$company->id}");
+            Cache::tags(['companies'])->flush();
+        });
     }
 }

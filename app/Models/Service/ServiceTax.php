@@ -4,13 +4,11 @@ namespace App\Models\Service;
 
 use App\Models\Sale\Tax;
 use App\Models\System\User;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Support\Facades\Cache;
 
-class ServiceTax extends Model
+class ServiceTax extends Pivot
 {
-    use HasFactory;
-
     protected $table = 'service_taxes';
     protected $fillable = [
         'tax_id',
@@ -38,5 +36,18 @@ class ServiceTax extends Model
     public function service()
     {
         return $this->belongsTo(Service::class, 'service_id');
+    }
+
+    protected static function booted()
+    {
+        static::saved(function ($serviceTax) {
+            Cache::forget("service_tax_{$serviceTax->id}");
+            Cache::tags(['services_taxes'])->flush();
+        });
+
+        static::deleted(function ($serviceTax) {
+            Cache::forget("service_tax_{$serviceTax->id}");
+            Cache::tags(['services_taxes'])->flush();
+        });
     }
 }

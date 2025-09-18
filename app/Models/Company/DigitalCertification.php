@@ -5,6 +5,7 @@ namespace App\Models\Company;
 use App\Models\System\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class DigitalCertification extends Model
 {
@@ -49,5 +50,18 @@ class DigitalCertification extends Model
     public function company()
     {
         return $this->belongsTo(Company::class);
+    }
+
+    protected static function booted()
+    {
+        static::saved(function ($digitalCertification) {
+            Cache::forget("digital_certification_{$digitalCertification->id}");
+            Cache::tags(['digital_certifications'])->flush();
+        });
+
+        static::deleted(function ($digitalCertification) {
+            Cache::forget("digital_certification_{$digitalCertification->id}");
+            Cache::tags(['digital_certifications'])->flush();
+        });
     }
 }

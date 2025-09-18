@@ -5,6 +5,7 @@ namespace App\Models\Company;
 use App\Models\System\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Cache;
 
 class Employee extends Model
 {
@@ -34,5 +35,18 @@ class Employee extends Model
     public function company()
     {
         return $this->belongsTo(Company::class);
+    }
+
+    protected static function booted()
+    {
+        static::saved(function ($employee) {
+            Cache::forget("employee_{$employee->id}");
+            Cache::tags(['employees'])->flush();
+        });
+
+        static::deleted(function ($employee) {
+            Cache::forget("employee_{$employee->id}");
+            Cache::tags(['employees'])->flush();
+        });
     }
 }

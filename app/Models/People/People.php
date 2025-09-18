@@ -6,6 +6,7 @@ use App\Models\Company\Company;
 use App\Models\System\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class People extends Model
 {
@@ -64,5 +65,18 @@ class People extends Model
     public function vehicles()
     {
         return $this->hasMany(Vehicle::class);
+    }
+
+    protected static function booted()
+    {
+        static::saved(function ($people) {
+            Cache::forget("person_{$people->id}");
+            Cache::tags(['people'])->flush();
+        });
+
+        static::deleted(function ($people) {
+            Cache::forget("person_{$people->id}");
+            Cache::tags(['people'])->flush();
+        });
     }
 }

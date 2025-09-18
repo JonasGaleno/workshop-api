@@ -17,10 +17,24 @@ class JwtMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        try {
+        /*try {
             JWTAuth::parseToken()->authenticate();
         } catch (Exception $e) {
             return response()->json(['error' => 'Unauthorized'], 401);
+        }*/
+
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
+
+            if (!$user) {
+                return response()->json(['error' => 'User not found'], 401);
+            }
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+            return response()->json(['error' => 'Token expired'], 401);
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+            return response()->json(['error' => 'Token invalid'], 401);
+        } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+            return response()->json(['error' => 'Token not provided'], 401);
         }
 
         return $next($request);

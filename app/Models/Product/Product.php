@@ -6,6 +6,7 @@ use App\Models\Company\Company;
 use App\Models\System\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Product extends Model
 {
@@ -43,5 +44,18 @@ class Product extends Model
     public function productTaxes()
     {
         return $this->hasMany(ProductTax::class);
+    }
+
+    protected static function booted()
+    {
+        static::saved(function ($product) {
+            Cache::forget("product_{$product->id}");
+            Cache::tags(['products'])->flush();
+        });
+
+        static::deleted(function ($product) {
+            Cache::forget("product_{$product->id}");
+            Cache::tags(['products'])->flush();
+        });
     }
 }

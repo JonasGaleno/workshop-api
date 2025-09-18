@@ -5,6 +5,7 @@ namespace App\Models\People;
 use App\Models\System\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Vehicle extends Model
 {
@@ -38,5 +39,18 @@ class Vehicle extends Model
     public function people()
     {
         return $this->belongsTo(People::class, 'person_id');
+    }
+
+    protected static function booted()
+    {
+        static::saved(function ($vehicle) {
+            Cache::forget("vehicle_{$vehicle->id}");
+            Cache::tags(['vehicles'])->flush();
+        });
+
+        static::deleted(function ($vehicle) {
+            Cache::forget("vehicle_{$vehicle->id}");
+            Cache::tags(['vehicles'])->flush();
+        });
     }
 }

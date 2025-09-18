@@ -5,6 +5,7 @@ namespace App\Models\People;
 use App\Models\System\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Email extends Model
 {
@@ -33,5 +34,18 @@ class Email extends Model
     public function people()
     {
         return $this->belongsTo(People::class, 'person_id');
+    }
+
+    protected static function booted()
+    {
+        static::saved(function ($email) {
+            Cache::forget("email_{$email->id}");
+            Cache::tags(['emails'])->flush();
+        });
+
+        static::deleted(function ($email) {
+            Cache::forget("email_{$email->id}");
+            Cache::tags(['emails'])->flush();
+        });
     }
 }

@@ -5,6 +5,7 @@ namespace App\Models\People;
 use App\Models\System\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Address extends Model
 {
@@ -41,5 +42,18 @@ class Address extends Model
     public function people()
     {
         return $this->belongsTo(People::class, 'person_id');
+    }
+
+    protected static function booted()
+    {
+        static::saved(function ($address) {
+            Cache::forget("address_{$address->id}");
+            Cache::tags(['addresses'])->flush();
+        });
+
+        static::deleted(function ($address) {
+            Cache::forget("address_{$address->id}");
+            Cache::tags(['addresses'])->flush();
+        });
     }
 }
